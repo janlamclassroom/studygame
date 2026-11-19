@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>魔法溫書大冒險 ✨</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Noto Sans TC & Fredoka -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-main: 'Fredoka', 'Noto Sans TC', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background: linear-gradient(135deg, #f3e8ff 0%, #e0f2fe 50%, #fef3c7 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    /* Magical floating background blobs */
+    .bg-magic-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.5;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Tactile 3D game buttons */
+    .btn-3d {
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+    }
+    .btn-3d:active:not(:disabled) {
+      transform: translateY(4px);
+    }
+    .btn-3d-violet {
+      background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%);
+      box-shadow: 0 5px 0 #5b21b6, 0 10px 20px rgba(124, 58, 237, 0.25);
+    }
+    .btn-3d-violet:active:not(:disabled) {
+      box-shadow: 0 1px 0 #5b21b6, 0 4px 10px rgba(124, 58, 237, 0.25);
+    }
+    .btn-3d-amber {
+      background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+      box-shadow: 0 5px 0 #b45309, 0 10px 20px rgba(245, 158, 11, 0.3);
+    }
+    .btn-3d-amber:active:not(:disabled) {
+      box-shadow: 0 1px 0 #b45309, 0 4px 10px rgba(245, 158, 11, 0.3);
+    }
+    .btn-3d-emerald {
+      background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+      box-shadow: 0 5px 0 #047857, 0 10px 20px rgba(16, 185, 129, 0.3);
+    }
+    .btn-3d-emerald:active:not(:disabled) {
+      box-shadow: 0 1px 0 #047857, 0 4px 10px rgba(16, 185, 129, 0.3);
+    }
+    .btn-3d-sky {
+      background: linear-gradient(180deg, #38bdf8 0%, #0ea5e9 100%);
+      box-shadow: 0 5px 0 #0369a1, 0 10px 20px rgba(14, 165, 233, 0.25);
+    }
+    .btn-3d-sky:active:not(:disabled) {
+      box-shadow: 0 1px 0 #0369a1, 0 4px 10px rgba(14, 165, 233, 0.25);
+    }
+
+    /* Animations */
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+    .animate-float {
+      animation: floatSlow 3s ease-in-out infinite;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.75); opacity: 0; }
+      70% { transform: scale(1.04); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes screenShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px) rotate(-0.8deg); }
+      40% { transform: translateX(8px) rotate(0.8deg); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+    .animate-shake {
+      animation: screenShake 0.35s ease-in-out;
+    }
+
+    @keyframes badgePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    .animate-badge {
+      animation: badgePulse 1.8s ease-in-out infinite;
+    }
+
+    /* Wheel pointer bounce */
+    .wheel-pointer {
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.25));
+    }
+
+    /* Game canvas touch handling */
+    .game-canvas {
+      touch-action: none;
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Whack-a-sprite portal styling */
+    .magic-portal {
+      background: radial-gradient(circle at 50% 60%, #4c1d95 0%, #2e1065 70%, #1e1b4b 100%);
+      box-shadow: inset 0 8px 16px rgba(0, 0, 0, 0.6), 0 4px 0 #c4b5fd;
+      overflow: hidden;
+      position: relative;
+      touch-action: manipulation;
+    }
+    .sprite-entity {
+      transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform: translateY(115%) scale(0.8);
+    }
+    .sprite-entity.up {
+      transform: translateY(0%) scale(1);
+    }
+    .sprite-entity.hit {
+      transform: scale(1.35);
+      opacity: 0;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    /* Floating score feedback */
+    @keyframes floatUpFade {
+      0% { transform: translate(-50%, 0) scale(0.8); opacity: 1; }
+      100% { transform: translate(-50%, -44px) scale(1.15); opacity: 0; }
+    }
+    .score-popup {
+      position: absolute;
+      pointer-events: none;
+      font-weight: 900;
+      animation: floatUpFade 0.65s ease-out forwards;
+      z-index: 30;
+      text-shadow: 0 2px 4px rgba(255,255,255,0.9);
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased">
+
+  <!-- Soft magical background orbs -->
+  <div class="bg-magic-orb w-72 h-72 bg-purple-300 top-[-40px] left-[-60px]"></div>
+  <div class="bg-magic-orb w-80 h-80 bg-sky-300 top-1/3 right-[-80px]"></div>
+  <div class="bg-magic-orb w-72 h-72 bg-amber-200 bottom-[-40px] left-1/4"></div>
+
+  <!-- Full-screen Confetti Overlay Canvas -->
+  <canvas id="confetti-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-50"></canvas>
+
+  <!-- Main App Container -->
+  <div class="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col gap-4 sm:gap-5">
+
+    <!-- Top Header Bar -->
+    <header class="bg-white/85 backdrop-blur-md border-2 border-white rounded-3xl shadow-lg px-4 py-3 sm:px-6 sm:py-4 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-2xl sm:text-3xl shadow-md animate-float">
+          🪄
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-violet-700 via-fuchsia-600 to-amber-500 bg-clip-text text-transparent tracking-wide">
+            魔法溫書大冒險
+          </h1>
+          <p class="text-xs sm:text-sm text-slate-500 font-medium">完成溫書任務，贏取獎勵小遊戲！</p>
+        </div>
+      </div>
+
+      <!-- Stats & Controls -->
+      <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <!-- Completed Tasks Counter -->
+        <div class="flex items-center gap-1.5 bg-violet-50 border border-violet-200 px-3 py-1.5 rounded-2xl shadow-sm">
+          <span class="text-lg">🏆</span>
+          <div class="leading-tight">
+            <div class="text-[10px] text-violet-500 font-bold">完成任務</div>
+            <div id="stat-tasks" class="text-sm sm:text-base font-black text-violet-800">0</div>
+          </div>
+        </div>
+
+        <!-- Earned Stars Counter -->
+        <div class="flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-2xl shadow-sm">
+          <span class="text-lg">⭐</span>
+          <div class="leading-tight">
+            <div class="text-[10px] text-amber-600 font-bold">獲得星星</div>
+            <div id="stat-stars" class="text-sm sm:text-base font-black text-amber-700">0</div>
+          </div>
+        </div>
+
+        <!-- Sound Toggle Button -->
+        <button id="btn-sound" type="button" onclick="toggleSound()" class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-sky-50 hover:bg-sky-100 border border-sky-200 flex items-center justify-center text-xl transition active:scale-95 shadow-sm" title="開關音效">
+          🔊
+        </button>
+
+        <!-- Quick Teacher Preview Mini-Games Button -->
+        <button type="button" onclick="openGameSelector(true)" class="px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition active:scale-95 border border-slate-200" title="家長/老師直接試玩小遊戲">
+          🎮 試玩
+        </button>
+      </div>
+    </header>
+
+    <!-- Step 1: Study Mode Selector -->
+    <section class="bg-white/80 backdrop-blur-md border-2 border-white rounded-3xl shadow-md p-2.5 sm:p-3">
+      <div class="grid grid-cols-3 gap-2 sm:gap-3" role="tablist" aria-label="溫習模式選擇">
+        <!-- Mode 1: Reading -->
+        <button id="tab-reading" type="button" onclick="switchMode('reading')" class="mode-tab relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:px-4 rounded-2xl font-bold text-sm sm:text-base transition-all border-2">
+          <span class="text-xl sm:text-2xl">📖</span>
+          <span>閱讀理解</span>
+        </button>
+
+        <!-- Mode 2: Writing -->
+        <button id="tab-writing" type="button" onclick="switchMode('writing')" class="mode-tab relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:px-4 rounded-2xl font-bold text-sm sm:text-base transition-all border-2">
+          <span class="text-xl sm:text-2xl">✍️</span>
+          <span>作文挑戰</span>
+        </button>
+
+        <!-- Mode 3: Language Knowledge (NEW!) -->
+        <button id="tab-knowledge" type="button" onclick="switchMode('knowledge')" class="mode-tab relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:px-4 rounded-2xl font-bold text-sm sm:text-base transition-all border-2">
+          <span class="absolute -top-2.5 right-1 sm:right-2 bg-gradient-to-r from-rose-500 to-amber-500 text-white text-[10px] sm:text-xs font-black px-2 py-0.5 rounded-full shadow-md animate-badge">
+            NEW!
+          </span>
+          <span class="text-xl sm:text-2xl">📚</span>
+          <span>語文知識</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Step 2: Wheel & Active Task Area -->
+    <main class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+      <!-- Left Column: Interactive Spinning Wheel -->
+      <section class="lg:col-span-6 bg-white/85 backdrop-blur-md border-2 border-white rounded-3xl shadow-xl p-5 sm:p-6 flex flex-col items-center">
+        <div class="w-full flex items-center justify-between mb-3">
+          <h2 id="wheel-mode-title" class="text-lg sm:text-xl font-black text-violet-800 flex items-center gap-2">
+            <span>📚</span> 語文知識轉盤
+          </h2>
+          <span class="text-xs font-bold bg-violet-100 text-violet-700 px-3 py-1 rounded-full">
+            無限次重複挑戰 ✨
+          </span>
+        </div>
+
+        <!-- Wheel Container -->
+        <div class="relative w-full max-w-[340px] sm:max-w-[380px] aspect-square my-2 flex items-center justify-center">
+          <!-- Top Pointer SVG -->
+          <div class="wheel-pointer absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+            <svg width="42" height="46" viewBox="0 0 42 46" fill="none">
+              <path d="M21 44L4 12C2.5 9 4.5 5 8 5H34C37.5 5 39.5 9 38 12L21 44Z" fill="#f59e0b" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>
+              <circle cx="21" cy="14" r="5" fill="#fef3c7"/>
+            </svg>
+          </div>
+
+          <!-- Canvas for Wheel -->
+          <canvas id="wheel-canvas" class="w-full h-full rounded-full shadow-2xl border-4 border-white"></canvas>
+
+          <!-- Center Cap -->
+          <div class="absolute w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white shadow-lg border-4 border-amber-400 flex items-center justify-center text-2xl pointer-events-none z-10">
+            ✨
+          </div>
+        </div>
+
+        <!-- Spin Button -->
+        <button id="btn-spin" type="button" onclick="spinWheel()" class="btn-3d btn-3d-violet mt-4 w-full max-w-xs py-4 px-6 rounded-2xl text-white font-black text-lg sm:text-xl tracking-wide flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+          <span>🎡</span>
+          <span id="btn-spin-text">開始轉動轉盤！</span>
+        </button>
+      </section>
+
+      <!-- Right Column: Active Task Card + Study Timer -->
+      <section class="lg:col-span-6 flex flex-col gap-4">
+
+        <!-- Active Mission Card -->
+        <div id="mission-card" class="bg-white/90 backdrop-blur-md border-2 border-white rounded-3xl shadow-xl p-5 sm:p-6 transition-all">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-black uppercase tracking-wider text-violet-600 flex items-center gap-1.5">
+              <span>🎯</span> 今關溫書任務
+            </span>
+            <span id="mission-badge" class="hidden text-xs font-black px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-rose-500 text-white shadow-sm animate-badge">
+              ⚡ 雙重挑戰觸發！
+            </span>
+          </div>
+
+          <!-- Empty / Waiting State -->
+          <div id="mission-empty" class="py-8 px-4 text-center bg-gradient-to-br from-violet-50/80 to-sky-50/80 rounded-2xl border-2 border-dashed border-violet-200">
+            <div class="text-4xl mb-2">🌟</div>
+            <p class="text-slate-600 font-bold text-base sm:text-lg">撳左邊「開始轉動轉盤！」</p>
+            <p class="text-slate-400 text-xs sm:text-sm mt-1">抽出今關魔法任務，做完就可以玩小遊戲！</p>
+          </div>
+
+          <!-- Drawn Mission State -->
+          <div id="mission-active" class="hidden space-y-3">
+            <div id="mission-list" class="space-y-2.5">
+              <!-- Dynamically populated task boxes -->
+            </div>
+
+            <!-- Complete Task & Unlock Games CTA -->
+            <button id="btn-complete-task" type="button" onclick="completeCurrentTask()" class="btn-3d btn-3d-emerald w-full py-4 px-5 rounded-2xl text-white font-black text-lg sm:text-xl flex items-center justify-center gap-2 mt-4">
+              <span>✅</span>
+              <span>完成任務！去玩獎勵小遊戲</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Built-in Study Countdown Timer -->
+        <div class="bg-white/85 backdrop-blur-md border-2 border-white rounded-3xl shadow-lg p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-black text-sky-800 flex items-center gap-2 text-base sm:text-lg">
+              <span>⏱️</span> 溫書限時倒數鐘
+            </h3>
+            <span id="timer-status" class="text-xs font-bold text-slate-400">可自由設定時間</span>
+          </div>
+
+          <!-- Digital Display -->
+          <div class="bg-gradient-to-r from-sky-50 via-indigo-50 to-violet-50 border border-sky-100 rounded-2xl py-3 px-4 flex items-center justify-between mb-3">
+            <div id="timer-display" class="text-4xl sm:text-5xl font-black tracking-wider text-indigo-700 font-mono">
+              05:00
+            </div>
+            <div class="flex gap-2">
+              <button id="btn-timer-toggle" type="button" onclick="toggleTimer()" class="btn-3d btn-3d-sky px-4 py-2.5 rounded-xl text-white font-bold text-sm sm:text-base">
+                開始
+              </button>
+              <button type="button" onclick="resetTimer()" class="px-3.5 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-sm sm:text-base transition active:scale-95">
+                重設
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Presets -->
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="setTimerPreset(3)" class="py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold text-sm transition active:scale-95">
+              3 分鐘
+            </button>
+            <button type="button" onclick="setTimerPreset(5)" class="py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold text-sm transition active:scale-95">
+              5 分鐘
+            </button>
+            <button type="button" onclick="setTimerPreset(10)" class="py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold text-sm transition active:scale-95">
+              10 分鐘
+            </button>
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <!-- =========================================================
+       MODAL 1: REWARD MINI-GAME SELECTOR
+       ========================================================= -->
+  <div id="modal-game-select" class="fixed inset-0 z-40 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white border-4 border-amber-300 rounded-3xl shadow-2xl max-w-2xl w-full p-5 sm:p-7 animate-pop my-auto">
+      <div class="text-center mb-5">
+        <div class="inline-block px-4 py-1 rounded-full bg-amber-100 text-amber-700 font-black text-xs sm:text-sm mb-2">
+          🎉 任務大成功！獎勵時間！
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-black text-violet-900">揀一個獎勵小遊戲玩啦！</h2>
+        <p class="text-slate-500 text-sm mt-1">每局只需約 15–20 秒，快閃放鬆完繼續溫書！</p>
+      </div>
+
+      <!-- 4 Mini-Game Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+
+        <!-- Game 1: Snake -->
+        <button type="button" onclick="launchGame('snake')" class="group text-left bg-gradient-to-br from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 border-2 border-emerald-200 hover:border-emerald-400 rounded-2xl p-4 transition-all shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-3.5">
+          <div class="w-14 h-14 rounded-2xl bg-emerald-500 text-3xl flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition">
+            🐍
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h3 class="font-black text-emerald-900 text-lg">魔法貪食蛇</h3>
+              <span class="text-[10px] font-bold bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full">經典</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-0.5">25秒內食滿 5 粒魔法蘋果即過關！支援滑動同按鍵。</p>
+          </div>
+        </button>
+
+        <!-- Game 2: Jump -->
+        <button type="button" onclick="launchGame('jump')" class="group text-left bg-gradient-to-br from-sky-50 to-indigo-50 hover:from-sky-100 hover:to-indigo-100 border-2 border-sky-200 hover:border-sky-400 rounded-2xl p-4 transition-all shadow-sm hover:shadow-md active:scale-[0.98] flex items-center gap-3.5">
+          <div class="w-14 h-14 rounded-2xl bg-sky-500 text-3xl flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition">
+            🏃
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h3 class="font-black text-sky-900 text-lg">魔法跳跳樂</h3>
+              <span class="text-[10px] font-bold bg-sky-200 text-sky-800 px-2 py-0.5 rounded-full">經典</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-0.5">撳螢幕跳過魔法障礙物，堅持 15 秒就贏得星星！</p>
+          </div>
+        </button>
+
+        <!-- Game 3: Catch Stars (NEW - Hand-Eye Coordination) -->
+        <button type="button" onclick="launchGame('catch')" class="relative group text-left bg-gradient-to-br from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border-2 border-amber-300 hover:border-amber-500 rounded-2xl p-4 transition-all shadow-md hover:shadow-lg active:scale-[0.98] flex items-center gap-3.5">
+          <span class="absolute -top-2.5 right-3 bg-gradient-to-r from-rose-500 to-amber-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow">
+            手眼協調・新
+          </span>
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-3xl flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition">
+            ⭐
+          </div>
+          <div>
+            <h3 class="font-black text-amber-900 text-lg">魔法接星星</h3>
+            <p class="text-xs text-slate-600 mt-0.5">左右拖動魔法帽接住星星同寶石，避開紫色炸彈！</p>
+          </div>
+        </button>
+
+        <!-- Game 4: Whack-a-Sprite (NEW - Hand-Eye Coordination) -->
+        <button type="button" onclick="launchGame('whack')" class="relative group text-left bg-gradient-to-br from-fuchsia-50 to-purple-50 hover:from-fuchsia-100 hover:to-purple-100 border-2 border-fuchsia-300 hover:border-fuchsia-500 rounded-2xl p-4 transition-all shadow-md hover:shadow-lg active:scale-[0.98] flex items-center gap-3.5">
+          <span class="absolute -top-2.5 right-3 bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow">
+            手眼協調・新
+          </span>
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-purple-600 text-3xl flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition">
+            👾
+          </div>
+          <div>
+            <h3 class="font-black text-purple-900 text-lg">極速拍拍小精靈</h3>
+            <p class="text-xs text-slate-600 mt-0.5">15秒極速反應！快手拍走小精靈，千祈唔好拍炸彈！</p>
+          </div>
+        </button>
+
+      </div>
+
+      <div class="mt-5 text-center">
+        <button type="button" onclick="closeGameSelector()" class="text-slate-400 hover:text-slate-600 text-sm font-bold px-4 py-2 rounded-xl hover:bg-slate-100 transition">
+          暫時唔玩，返回轉盤
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 2: ACTIVE MINI-GAME ARENA
+       ========================================================= -->
+  <div id="modal-game-arena" class="fixed inset-0 z-40 hidden bg-slate-900/75 backdrop-blur-md flex items-center justify-center p-2 sm:p-4">
+    <div id="game-arena-card" class="bg-white border-4 border-violet-300 rounded-3xl shadow-2xl w-full max-w-xl flex flex-col overflow-hidden relative">
+
+      <!-- Game Top HUD -->
+      <div class="bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span id="hud-icon" class="text-2xl">🎮</span>
+          <h3 id="hud-title" class="font-black text-base sm:text-lg">小遊戲</h3>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="bg-white/20 px-3 py-1 rounded-xl font-black text-sm sm:text-base flex items-center gap-1">
+            <span>🎯</span>
+            <span id="hud-score">0</span>
+          </div>
+          <div class="bg-amber-400 text-amber-950 px-3 py-1 rounded-xl font-black text-sm sm:text-base flex items-center gap-1">
+            <span>⏱️</span>
+            <span id="hud-time">20s</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Brief Instruction Banner -->
+      <div id="hud-tip" class="bg-violet-50 text-violet-800 text-xs sm:text-sm font-bold text-center py-1.5 px-3 border-b border-violet-100">
+        準備好未？開始！
+      </div>
+
+      <!-- Playfield Area -->
+      <div class="p-3 sm:p-4 bg-slate-50 flex flex-col items-center">
+        <!-- Canvas Container (Used by Snake, Jump, Catch) -->
+        <div id="canvas-game-wrapper" class="relative w-full aspect-[4/3] sm:aspect-[16/11] max-h-[380px] rounded-2xl overflow-hidden shadow-inner border-2 border-slate-200 bg-slate-900">
+          <canvas id="game-canvas" class="game-canvas"></canvas>
+        </div>
+
+        <!-- Snake On-Screen D-Pad Controls (iPad Friendly) -->
+        <div id="snake-controls" class="hidden mt-3 grid grid-cols-3 gap-2 w-48 select-none">
+          <div></div>
+          <button type="button" onpointerdown="setSnakeDir(0, -1)" class="btn-3d btn-3d-emerald h-12 rounded-xl text-white text-xl font-black flex items-center justify-center">▲</button>
+          <div></div>
+          <button type="button" onpointerdown="setSnakeDir(-1, 0)" class="btn-3d btn-3d-emerald h-12 rounded-xl text-white text-xl font-black flex items-center justify-center">◀</button>
+          <button type="button" onpointerdown="setSnakeDir(0, 1)" class="btn-3d btn-3d-emerald h-12 rounded-xl text-white text-xl font-black flex items-center justify-center">▼</button>
+          <button type="button" onpointerdown="setSnakeDir(1, 0)" class="btn-3d btn-3d-emerald h-12 rounded-xl text-white text-xl font-black flex items-center justify-center">▶</button>
+        </div>
+
+        <!-- Jump On-Screen Big Tap Button (Extra convenience for iPad) -->
+        <div id="jump-controls" class="hidden mt-3 w-full max-w-xs">
+          <button type="button" onpointerdown="triggerJump()" class="btn-3d btn-3d-sky w-full py-3.5 rounded-2xl text-white font-black text-lg">
+            ⬆️ 跳起！(或撳遊戲畫面)
+          </button>
+        </div>
+
+        <!-- Whack-a-Sprite 3x3 Portal Grid -->
+        <div id="whack-game-wrapper" class="hidden w-full max-w-[380px] aspect-square grid grid-cols-3 gap-3 sm:gap-4 p-2">
+          <!-- 9 portals generated by JS -->
+        </div>
+      </div>
+
+      <!-- Post-Game Result Overlay -->
+      <div id="game-result-overlay" class="hidden absolute inset-0 z-30 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-pop">
+        <div id="result-emoji" class="text-6xl mb-2 animate-float">🏆</div>
+        <h3 id="result-praise" class="text-2xl sm:text-3xl font-black text-violet-800 mb-1">太厲害喇！</h3>
+        <p id="result-detail" class="text-slate-600 font-bold text-sm sm:text-base mb-4">你喺今局攞到高分！</p>
+
+        <div class="flex items-center gap-4 mb-6">
+          <div class="bg-violet-50 border-2 border-violet-200 rounded-2xl px-5 py-3">
+            <div class="text-xs font-bold text-violet-500">本局得分</div>
+            <div id="result-score" class="text-2xl font-black text-violet-800">0</div>
+          </div>
+          <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl px-5 py-3">
+            <div class="text-xs font-bold text-amber-600">獲得星星</div>
+            <div id="result-stars" class="text-2xl font-black text-amber-600">+3 ⭐</div>
+          </div>
+        </div>
+
+        <button type="button" onclick="returnToWheel()" class="btn-3d btn-3d-amber w-full max-w-sm py-4 px-6 rounded-2xl text-amber-950 font-black text-lg flex items-center justify-center gap-2">
+          <span>🔄</span>
+          <span>返回轉盤，繼續下一關溫書</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification (Replaces alert) -->
+  <div id="toast-box" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden bg-slate-900/90 text-white px-5 py-3 rounded-2xl shadow-xl font-bold text-sm sm:text-base flex items-center gap-2">
+    <span id="toast-msg">提示訊息</span>
+  </div>
+
+  <script>
+    /* =====================================================================
+       1. WEB AUDIO API SOUND EFFECTS (Synthesized, Zero External Assets)
+       ===================================================================== */
+    const SoundFX = (() => {
+      let ctx = null;
+      let muted = false;
+
+      function init() {
+        if (!ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) ctx = new AudioCtx();
+        }
+        if (ctx && ctx.state === 'suspended') {
+          ctx.resume();
+        }
+      }
+
+      function playTone(freq, type, duration, vol = 0.12, slideTo = null) {
+        if (muted) return;
+        init();
+        if (!ctx) return;
+        try {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          if (slideTo) {
+            osc.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + duration);
+          }
+          gain.gain.setValueAtTime(vol, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+        } catch (e) {
+          // Ignore audio errors on restricted devices
+        }
+      }
+
+      return {
+        toggleMute() {
+          muted = !muted;
+          return muted;
+        },
+        isMuted: () => muted,
+        tick() {
+          playTone(620, 'triangle', 0.045, 0.09, 420);
+        },
+        click() {
+          playTone(500, 'sine', 0.06, 0.08, 650);
+        },
+        jump() {
+          playTone(300, 'sine', 0.16, 0.12, 680);
+        },
+        pop() {
+          playTone(520, 'sine', 0.1, 0.13, 880);
+        },
+        star() {
+          playTone(740, 'triangle', 0.11, 0.13, 1046);
+        },
+        gem() {
+          playTone(880, 'sine', 0.09, 0.13, 1320);
+          setTimeout(() => playTone(1174, 'sine', 0.14, 0.13, 1567), 70);
+        },
+        bomb() {
+          playTone(170, 'sawtooth', 0.22, 0.15, 65);
+        },
+        doubleTrigger() {
+          [523, 659, 784, 1046].forEach((f, i) => {
+            setTimeout(() => playTone(f, 'triangle', 0.16, 0.13), i * 85);
+          });
+        },
+        win() {
+          [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+            setTimeout(() => playTone(f, 'sine', 0.24, 0.14), i * 110);
+          });
+        },
+        timerDone() {
+          [880, 880, 1174].forEach((f, i) => {
+            setTimeout(() => playTone(f, 'triangle', 0.25, 0.15), i * 220);
+          });
+        }
+      };
+    })();
+
+    function toggleSound() {
+      const isMuted = SoundFX.toggleMute();
+      const btn = document.getElementById('btn-sound');
+      btn.textContent = isMuted ? '🔇' : '🔊';
+      showToast(isMuted ? '已靜音 🔇' : '已開啟魔法音效 🔊');
+    }
+
+    function showToast(msg) {
+      const box = document.getElementById('toast-box');
+      document.getElementById('toast-msg').textContent = msg;
+      box.classList.remove('hidden');
+      clearTimeout(box._timeout);
+      box._timeout = setTimeout(() => box.classList.add('hidden'), 2400);
+    }
+
+    /* =====================================================================
+       2. CONFETTI CELEBRATION ENGINE
+       ===================================================================== */
+    const Confetti = (() => {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      let rafId = null;
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      function burst(count = 75) {
+        const colors = ['#f43f5e', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
+        for (let i = 0; i < count; i++) {
+          particles.push({
+            x: canvas.width * (0.25 + Math.random() * 0.5),
+            y: canvas.height * 0.35,
+            vx: (Math.random() - 0.5) * 14,
+            vy: -Math.random() * 12 - 4,
+            size: Math.random() * 8 + 5,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rot: Math.random() * 360,
+            vRot: (Math.random() - 0.5) * 12,
+            life: 1
+          });
+        }
+        if (!rafId) loop();
+      }
+
+      function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.35;
+          p.rot += p.vRot;
+          p.life -= 0.012;
+          if (p.life <= 0 || p.y > canvas.height + 20) {
+            particles.splice(i, 1);
+            continue;
+          }
+          ctx.save();
+          ctx.globalAlpha = p.life;
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rot * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+          ctx.restore();
+        }
+        if (particles.length > 0) {
+          rafId = requestAnimationFrame(loop);
+        } else {
+          rafId = null;
+        }
+      }
+
+      return { burst };
+    })();
+
+    /* =====================================================================
+       3. APP DATA, MODES & PERSISTENT STATS
+       ===================================================================== */
+    const STUDY_MODES = {
+      reading: {
+        id: 'reading',
+        icon: '📖',
+        name: '閱讀理解',
+        tasks: [
+          '畫出答案重點',
+          '選擇題零錯誤',
+          '長答題寫3-4句',
+          '限時內完成',
+          '隨機 1+1 任務'
+        ],
+        colors: ['#a78bfa', '#38bdf8', '#34d399', '#fbbf24', '#fb7185']
+      },
+      writing: {
+        id: 'writing',
+        icon: '✍️',
+        name: '作文挑戰',
+        tasks: [
+          '用4個四字詞',
+          '用2種修辭手法',
+          '2句動作描寫',
+          '2句心理描寫',
+          '限時內完成',
+          '隨機 1+1 任務'
+        ],
+        colors: ['#818cf8', '#f472b6', '#2dd4bf', '#fbbf24', '#60a5fa', '#fb7185']
+      },
+      knowledge: {
+        id: 'knowledge',
+        icon: '📚',
+        name: '語文知識',
+        tasks: [
+          '寫靚字',
+          '答中晒所有嘢',
+          '限時內做完',
+          '隨機 1+1 任務'
+        ],
+        colors: ['#c084fc', '#38bdf8', '#4ade80', '#fb923c']
+      }
+    };
+
+    // State
+    let currentMode = 'knowledge'; // Default to the newly requested 語文知識 mode
+    let stats = { tasks: 0, stars: 0 };
+    let isSpinning = false;
+    let wheelAngle = 0; // Radians
+    let currentMission = null; // { isDouble: bool, tasks: string[] }
+    let isPreviewMode = false; // Teacher quick-play flag
+
+    function loadStats() {
+      try {
+        const saved = localStorage.getItem('magic_study_stats_v2');
+        if (saved) stats = JSON.parse(saved);
+      } catch (e) {}
+      updateStatsUI();
+    }
+
+    function saveStats() {
+      try {
+        localStorage.setItem('magic_study_stats_v2', JSON.stringify(stats));
+      } catch (e) {}
+      updateStatsUI();
+    }
+
+    function updateStatsUI() {
+      document.getElementById('stat-tasks').textContent = stats.tasks;
+      document.getElementById('stat-stars').textContent = stats.stars;
+    }
+
+    /* =====================================================================
+       4. MODE SWITCHING & INTERACTIVE SPINNING WHEEL
+       ===================================================================== */
+    function switchMode(modeKey) {
+      if (isSpinning) return;
+      SoundFX.click();
+      currentMode = modeKey;
+
+      // Update Tab Styling
+      Object.keys(STUDY_MODES).forEach(key => {
+        const tab = document.getElementById(`tab-${key}`);
+        if (key === modeKey) {
+          tab.className = 'mode-tab relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:px-4 rounded-2xl font-black text-sm sm:text-base transition-all border-2 bg-gradient-to-br from-violet-600 to-indigo-600 text-white border-violet-500 shadow-lg scale-[1.02]';
+        } else {
+          tab.className = 'mode-tab relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-3 px-2 sm:px-4 rounded-2xl font-bold text-sm sm:text-base transition-all border-2 bg-white hover:bg-violet-50 text-slate-600 border-slate-200';
+        }
+      });
+
+      const mode = STUDY_MODES[currentMode];
+      document.getElementById('wheel-mode-title').innerHTML = `<span>${mode.icon}</span> ${mode.name}轉盤`;
+
+      // Reset mission display gently when switching modes
+      currentMission = null;
+      document.getElementById('mission-empty').classList.remove('hidden');
+      document.getElementById('mission-active').classList.add('hidden');
+      document.getElementById('mission-badge').classList.add('hidden');
+
+      wheelAngle = 0;
+      drawWheel();
+    }
+
+    function drawWheel() {
+      const canvas = document.getElementById('wheel-canvas');
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const size = Math.max(rect.width, 260);
+      if (canvas.width !== Math.round(size * dpr) || canvas.height !== Math.round(size * dpr)) {
+        canvas.width = Math.round(size * dpr);
+        canvas.height = Math.round(size * dpr);
+      }
+
+      const ctx = canvas.getContext('2d');
+      ctx.save();
+      ctx.scale(dpr, dpr);
+
+      const cx = size / 2;
+      const cy = size / 2;
+      const radius = size / 2 - 6;
+
+      const mode = STUDY_MODES[currentMode];
+      const tasks = mode.tasks;
+      const colors = mode.colors;
+      const sliceAngle = (Math.PI * 2) / tasks.length;
+
+      ctx.clearRect(0, 0, size, size);
+
+      // Draw each slice
+      for (let i = 0; i < tasks.length; i++) {
+        const startA = wheelAngle + i * sliceAngle;
+        const endA = startA + sliceAngle;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, radius, startA, endA);
+        ctx.closePath();
+
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        // Draw Label
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(startA + sliceAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = 'rgba(0,0,0,0.28)';
+        ctx.shadowBlur = 4;
+
+        const label = tasks[i];
+        const fontSize = size < 300 ? 13 : (tasks.length <= 4 ? 17 : 15);
+        ctx.font = `900 ${fontSize}px "Noto Sans TC", sans-serif`;
+
+        // Special icon prefix for 1+1
+        const displayLabel = label.includes('1+1') ? '⚡ ' + label : label;
+        ctx.fillText(displayLabel, radius - 18, 0);
+        ctx.restore();
+      }
+
+      // Outer decorative gold rim dots
+      const dotCount = tasks.length * 4;
+      for (let j = 0; j < dotCount; j++) {
+        const a = wheelAngle + (j * Math.PI * 2) / dotCount;
+        const dx = cx + Math.cos(a) * (radius - 5);
+        const dy = cy + Math.sin(a) * (radius - 5);
+        ctx.beginPath();
+        ctx.arc(dx, dy, 3, 0, Math.PI * 2);
+        ctx.fillStyle = j % 2 === 0 ? '#fef3c7' : '#ffffff';
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function spinWheel() {
+      if (isSpinning) return;
+      isSpinning = true;
+
+      const btn = document.getElementById('btn-spin');
+      const btnText = document.getElementById('btn-spin-text');
+      btn.disabled = true;
+      btnText.textContent = '魔法轉盤轉動中...';
+
+      const mode = STUDY_MODES[currentMode];
+      const sliceCount = mode.tasks.length;
+      const sliceAngle = (Math.PI * 2) / sliceCount;
+
+      const startAngle = wheelAngle;
+      // 5 to 7 full spins + random offset
+      const extraSpins = (5 + Math.random() * 2.5) * Math.PI * 2;
+      const targetAngle = startAngle + extraSpins;
+      const duration = 3400; // ms
+      const startTime = performance.now();
+
+      let lastTickIndex = -1;
+
+      function animate(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        // Smooth cubic ease-out
+        const eased = 1 - Math.pow(1 - t, 3.3);
+        wheelAngle = startAngle + (targetAngle - startAngle) * eased;
+
+        // Tick sound whenever a slice boundary crosses the top pointer (-PI/2)
+        const pointerRel = ((-Math.PI / 2 - wheelAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        const currentIdx = Math.floor(pointerRel / sliceAngle);
+        if (currentIdx !== lastTickIndex) {
+          SoundFX.tick();
+          lastTickIndex = currentIdx;
+        }
+
+        drawWheel();
+
+        if (t < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          isSpinning = false;
+          btn.disabled = false;
+          btnText.textContent = '再轉一次轉盤！';
+          handleWheelResult(currentIdx);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    function handleWheelResult(index) {
+      const mode = STUDY_MODES[currentMode];
+      const drawnTask = mode.tasks[index];
+      const badge = document.getElementById('mission-badge');
+      const listEl = document.getElementById('mission-list');
+
+      document.getElementById('mission-empty').classList.add('hidden');
+      document.getElementById('mission-active').classList.remove('hidden');
+
+      if (drawnTask.includes('1+1')) {
+        // Special 1+1 Double Challenge! Pick 2 distinct tasks from remaining tasks
+        const pool = mode.tasks.filter(t => !t.includes('1+1'));
+        const shuffled = [...pool].sort(() => Math.random() - 0.5);
+        const picked = shuffled.slice(0, 2);
+
+        currentMission = { isDouble: true, tasks: picked };
+        badge.classList.remove('hidden');
+        SoundFX.doubleTrigger();
+        Confetti.burst(60);
+
+        listEl.innerHTML = `
+          <div class="bg-gradient-to-r from-amber-50 to-rose-50 border-2 border-amber-300 rounded-2xl p-3.5 animate-pop">
+            <div class="text-xs font-black text-rose-600 mb-2 flex items-center gap-1">
+              <span>⚡</span> 抽中「隨機 1+1 任務」！今關要同時完成兩個挑戰：
+            </div>
+            <div class="space-y-2">
+              <div class="bg-white rounded-xl p-3 shadow-sm border border-amber-200 flex items-center gap-3">
+                <span class="w-7 h-7 rounded-full bg-amber-400 text-amber-950 font-black flex items-center justify-center shrink-0">1</span>
+                <span class="font-black text-slate-800 text-lg">${picked[0]}</span>
+              </div>
+              <div class="bg-white rounded-xl p-3 shadow-sm border border-rose-200 flex items-center gap-3">
+                <span class="w-7 h-7 rounded-full bg-rose-500 text-white font-black flex items-center justify-center shrink-0">2</span>
+                <span class="font-black text-slate-800 text-lg">${picked[1]}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        currentMission = { isDouble: false, tasks: [drawnTask] };
+        badge.classList.add('hidden');
+        SoundFX.win();
+
+        listEl.innerHTML = `
+          <div class="bg-gradient-to-r from-violet-50 to-sky-50 border-2 border-violet-200 rounded-2xl p-5 text-center animate-pop">
+            <div class="text-xs font-bold text-violet-500 mb-1">${mode.icon} ${mode.name}任務</div>
+            <div class="text-2xl sm:text-3xl font-black text-violet-900">${drawnTask}</div>
+          </div>
+        `;
+      }
+
+      // Highlight card briefly
+      const card = document.getElementById('mission-card');
+      card.classList.add('ring-4', 'ring-amber-300');
+      setTimeout(() => card.classList.remove('ring-4', 'ring-amber-300'), 900);
+    }
+
+    function completeCurrentTask() {
+      if (!currentMission) return;
+      SoundFX.win();
+      Confetti.burst(80);
+      stats.tasks += 1;
+      // Bonus star for completing a double 1+1 challenge
+      stats.stars += currentMission.isDouble ? 2 : 1;
+      saveStats();
+      stopTimer();
+      openGameSelector(false);
+    }
+
+    /* =====================================================================
+       5. BUILT-IN STUDY COUNTDOWN TIMER
+       ===================================================================== */
+    let timerTotal = 300; // Default 5 minutes
+    let timerRemaining = 300;
+    let timerInterval = null;
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function updateTimerUI() {
+      const disp = document.getElementById('timer-display');
+      disp.textContent = formatTime(timerRemaining);
+      if (timerRemaining <= 10 && timerRemaining > 0 && timerInterval) {
+        disp.classList.add('text-rose-600');
+        disp.classList.remove('text-indigo-700');
+      } else {
+        disp.classList.remove('text-rose-600');
+        disp.classList.add('text-indigo-700');
+      }
+    }
+
+    function setTimerPreset(minutes) {
+      SoundFX.click();
+      stopTimer();
+      timerTotal = minutes * 60;
+      timerRemaining = timerTotal;
+      document.getElementById('timer-status').textContent = `已設定 ${minutes} 分鐘`;
+      updateTimerUI();
+    }
+
+    function toggleTimer() {
+      SoundFX.click();
+      if (timerInterval) {
+        stopTimer();
+        document.getElementById('timer-status').textContent = '已暫停';
+      } else {
+        if (timerRemaining <= 0) timerRemaining = timerTotal;
+        document.getElementById('btn-timer-toggle').textContent = '暫停';
+        document.getElementById('timer-status').textContent = '計時進行中...';
+        timerInterval = setInterval(() => {
+          timerRemaining--;
+          updateTimerUI();
+          if (timerRemaining <= 0) {
+            stopTimer();
+            SoundFX.timerDone();
+            document.getElementById('timer-status').textContent = '⏰ 時間到！';
+            showToast('⏰ 限時時間到喇！快啲檢查答案！');
+          }
+        }, 1000);
+      }
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      document.getElementById('btn-timer-toggle').textContent = '開始';
+    }
+
+    function resetTimer() {
+      SoundFX.click();
+      stopTimer();
+      timerRemaining = timerTotal;
+      document.getElementById('timer-status').textContent = '已重設時間';
+      updateTimerUI();
+    }
+
+    /* =====================================================================
+       6. MINI-GAME MANAGER & LIFECYCLE
+       ===================================================================== */
+    let activeGameCleanup = null;
+
+    function openGameSelector(preview = false) {
+      isPreviewMode = preview;
+      SoundFX.click();
+      document.getElementById('modal-game-select').classList.remove('hidden');
+    }
+
+    function closeGameSelector() {
+      SoundFX.click();
+      document.getElementById('modal-game-select').classList.add('hidden');
+    }
+
+    function launchGame(gameType) {
+      SoundFX.click();
+      document.getElementById('modal-game-select').classList.add('hidden');
+      document.getElementById('modal-game-arena').classList.remove('hidden');
+      document.getElementById('game-result-overlay').classList.add('hidden');
+
+      // Reset all game sub-containers
+      document.getElementById('canvas-game-wrapper').classList.add('hidden');
+      document.getElementById('snake-controls').classList.add('hidden');
+      document.getElementById('jump-controls').classList.add('hidden');
+      document.getElementById('whack-game-wrapper').classList.add('hidden');
+
+      if (activeGameCleanup) {
+        activeGameCleanup();
+        activeGameCleanup = null;
+      }
+
+      if (gameType === 'snake') startSnakeGame();
+      else if (gameType === 'jump') startJumpGame();
+      else if (gameType === 'catch') startCatchGame();
+      else if (gameType === 'whack') startWhackGame();
+    }
+
+    function showGameResult({ emoji, praise, detail, scoreText, starsEarned }) {
+      if (activeGameCleanup) {
+        activeGameCleanup();
+        activeGameCleanup = null;
+      }
+
+      // Add stars to total
+      if (!isPreviewMode || starsEarned > 0) {
+        stats.stars += starsEarned;
+        saveStats();
+      }
+
+      document.getElementById('result-emoji').textContent = emoji;
+      document.getElementById('result-praise').textContent = praise;
+      document.getElementById('result-detail').textContent = detail;
+      document.getElementById('result-score').textContent = scoreText;
+      document.getElementById('result-stars').textContent = `+${starsEarned} ⭐`;
+      document.getElementById('game-result-overlay').classList.remove('hidden');
+
+      SoundFX.win();
+      Confetti.burst(90);
+    }
+
+    function returnToWheel() {
+      SoundFX.click();
+      if (activeGameCleanup) {
+        activeGameCleanup();
+        activeGameCleanup = null;
+      }
+      document.getElementById('modal-game-arena').classList.add('hidden');
+      document.getElementById('game-result-overlay').classList.add('hidden');
+
+      // Clear previous mission so student spins fresh for the next round
+      if (!isPreviewMode) {
+        currentMission = null;
+        document.getElementById('mission-empty').classList.remove('hidden');
+        document.getElementById('mission-active').classList.add('hidden');
+        document.getElementById('mission-badge').classList.add('hidden');
+      }
+    }
+
+    function triggerArenaShake() {
+      const card = document.getElementById('game-arena-card');
+      card.classList.remove('animate-shake');
+      void card.offsetWidth; // Force reflow
+      card.classList.add('animate-shake');
+    }
+
+    // Helper: Size game canvas cleanly to its wrapper
+    function setupGameCanvas() {
+      const wrapper = document.getElementById('canvas-game-wrapper');
+      const canvas = document.getElementById('game-canvas');
+      const dpr = window.devicePixelRatio || 1;
+      const w = wrapper.clientWidth || 480;
+      const h = wrapper.clientHeight || 330;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { canvas, ctx, w, h };
+    }
+
+    /* =====================================================================
+       GAME 1: 🐍 魔法貪食蛇 (Classic - 25s or Eat 5 Apples)
+       ===================================================================== */
+    let snakeSetDirFn = null;
+    function setSnakeDir(dx, dy) {
+      if (snakeSetDirFn) snakeSetDirFn(dx, dy);
+    }
+
+    function startSnakeGame() {
+      document.getElementById('hud-icon').textContent = '🐍';
+      document.getElementById('hud-title').textContent = '魔法貪食蛇';
+      document.getElementById('hud-tip').textContent = '滑動畫面或撳方向鍵，食滿 5 粒魔法蘋果即過關！';
+      document.getElementById('canvas-game-wrapper').classList.remove('hidden');
+      document.getElementById('snake-controls').classList.remove('hidden');
+
+      const { canvas, ctx, w, h } = setupGameCanvas();
+      const cols = 16;
+      const rows = 11;
+      const cellW = w / cols;
+      const cellH = h / rows;
+
+      let snake = [
+        { x: 6, y: 5 },
+        { x: 5, y: 5 },
+        { x: 4, y: 5 }
+      ];
+      let dir = { x: 1, y: 0 };
+      let nextDir = { x: 1, y: 0 };
+      let applesEaten = 0;
+      const targetApples = 5;
+      let timeLeft = 25;
+      let ended = false;
+
+      function spawnApple() {
+        let pos;
+        do {
+          pos = {
+            x: Math.floor(Math.random() * cols),
+            y: Math.floor(Math.random() * rows)
+          };
+        } while (snake.some(s => s.x === pos.x && s.y === pos.y));
+        return pos;
+      }
+      let apple = spawnApple();
+
+      document.getElementById('hud-score').textContent = `0 / ${targetApples} 🍎`;
+      document.getElementById('hud-time').textContent = `${timeLeft}s`;
+
+      snakeSetDirFn = (dx, dy) => {
+        if (dx === -dir.x && dy === -dir.y) return;
+        nextDir = { x: dx, y: dy };
+      };
+
+      // Keyboard controls
+      function onKeyDown(e) {
+        if (e.key === 'ArrowUp') { e.preventDefault(); snakeSetDirFn(0, -1); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); snakeSetDirFn(0, 1); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); snakeSetDirFn(-1, 0); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); snakeSetDirFn(1, 0); }
+      }
+      window.addEventListener('keydown', onKeyDown);
+
+      // Touch swipe controls on canvas
+      let touchStartX = 0, touchStartY = 0;
+      function onTouchStart(e) {
+        const t = e.touches[0];
+        touchStartX = t.clientX;
+        touchStartY = t.clientY;
+      }
+      function onTouchEnd(e) {
+        const t = e.changedTouches[0];
+        const dx = t.clientX - touchStartX;
+        const dy = t.clientY - touchStartY;
+        if (Math.abs(dx) < 18 && Math.abs(dy) < 18) return;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          snakeSetDirFn(dx > 0 ? 1 : -1, 0);
+        } else {
+          snakeSetDirFn(0, dy > 0 ? 1 : -1);
+        }
+      }
+      canvas.addEventListener('touchstart', onTouchStart, { passive: true });
+      canvas.addEventListener('touchend', onTouchEnd, { passive: true });
+
+      function draw() {
+        // Checkerboard magical meadow
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            ctx.fillStyle = (r + c) % 2 === 0 ? '#064e3b' : '#065f46';
+            ctx.fillRect(c * cellW, r * cellH, cellW + 0.5, cellH + 0.5);
+          }
+        }
+
+        // Draw Magic Apple
+        const ax = apple.x * cellW + cellW / 2;
+        const ay = apple.y * cellH + cellH / 2;
+        ctx.font = `${Math.min(cellW, cellH) * 0.85}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🍎', ax, ay + 1);
+
+        // Draw Snake
+        snake.forEach((seg, idx) => {
+          const sx = seg.x * cellW + 2;
+          const sy = seg.y * cellH + 2;
+          const sw = cellW - 4;
+          const sh = cellH - 4;
+          ctx.fillStyle = idx === 0 ? '#34d399' : '#10b981';
+          ctx.beginPath();
+          ctx.roundRect(sx, sy, sw, sh, 7);
+          ctx.fill();
+
+          if (idx === 0) {
+            // Cute eyes
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(sx + sw * 0.35, sy + sh * 0.35, 3, 0, Math.PI * 2);
+            ctx.arc(sx + sw * 0.65, sy + sh * 0.35, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#064e3b';
+            ctx.beginPath();
+            ctx.arc(sx + sw * 0.35, sy + sh * 0.35, 1.5, 0, Math.PI * 2);
+            ctx.arc(sx + sw * 0.65, sy + sh * 0.35, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+      }
+
+      function finishSnake(won) {
+        if (ended) return;
+        ended = true;
+        const stars = won ? 3 : Math.max(1, Math.ceil(applesEaten / 2));
+        showGameResult({
+          emoji: won ? '🐍✨' : '🍎',
+          praise: won ? '食晒 5 粒蘋果！太厲害喇！' : '玩得好好喎！繼續加油！',
+          detail: won ? '魔法貪食蛇極速通關成功！' : `你成功食到 ${applesEaten} 粒魔法蘋果！`,
+          scoreText: `${applesEaten} 粒蘋果`,
+          starsEarned: stars
+        });
+      }
+
+      // Game tick (kid-friendly pace: 165ms)
+      const moveInterval = setInterval(() => {
+        if (ended) return;
+        dir = nextDir;
+        const head = {
+          x: (snake[0].x + dir.x + cols) % cols, // Wrap-around walls for fun, kid-friendly play!
+          y: (snake[0].y + dir.y + rows) % rows
+        };
+
+        // Self-collision check
+        if (snake.some(s => s.x === head.x && s.y === head.y)) {
+          SoundFX.bomb();
+          triggerArenaShake();
+          finishSnake(false);
+          return;
+        }
+
+        snake.unshift(head);
+
+        if (head.x === apple.x && head.y === apple.y) {
+          applesEaten++;
+          SoundFX.star();
+          document.getElementById('hud-score').textContent = `${applesEaten} / ${targetApples} 🍎`;
+          if (applesEaten >= targetApples) {
+            draw();
+            finishSnake(true);
+            return;
+          }
+          apple = spawnApple();
+        } else {
+          snake.pop();
+        }
+        draw();
+      }, 165);
+
+      const countdownInterval = setInterval(() => {
+        if (ended) return;
+        timeLeft--;
+        document.getElementById('hud-time').textContent = `${timeLeft}s`;
+        if (timeLeft <= 0) {
+          finishSnake(applesEaten >= targetApples);
+        }
+      }, 1000);
+
+      draw();
+
+      activeGameCleanup = () => {
+        clearInterval(moveInterval);
+        clearInterval(countdownInterval);
+        window.removeEventListener('keydown', onKeyDown);
+        canvas.removeEventListener('touchstart', onTouchStart);
+        canvas.removeEventListener('touchend', onTouchEnd);
+        snakeSetDirFn = null;
+      };
+    }
+
+    /* =====================================================================
+       GAME 2: 🏃 魔法跳跳樂 (Classic - 15s Fast Runner)
+       ===================================================================== */
+    let jumpTriggerFn = null;
+    function triggerJump() {
+      if (jumpTriggerFn) jumpTriggerFn();
+    }
+
+    function startJumpGame() {
+      document.getElementById('hud-icon').textContent = '🏃';
+      document.getElementById('hud-title').textContent = '魔法跳跳樂';
+      document.getElementById('hud-tip').textContent = '撳螢幕或空白鍵跳過障礙物（支援二段跳），堅持 15 秒即贏！';
+      document.getElementById('canvas-game-wrapper').classList.remove('hidden');
+      document.getElementById('jump-controls').classList.remove('hidden');
+
+      const { canvas, ctx, w, h } = setupGameCanvas();
+      const groundY = h - 46;
+
+      let player = { x: 64, y: groundY - 38, vy: 0, w: 34, h: 38, jumpsLeft: 2 };
+      let obstacles = [];
+      let cleared = 0;
+      let timeLeft = 15;
+      let spawnCooldown = 55;
+      let frameCount = 0;
+      let ended = false;
+      let rafId = null;
+
+      document.getElementById('hud-score').textContent = '0 關';
+      document.getElementById('hud-time').textContent = `${timeLeft}s`;
+
+      jumpTriggerFn = () => {
+        if (ended) return;
+        if (player.jumpsLeft > 0) {
+          player.vy = -11.8;
+          player.jumpsLeft--;
+          SoundFX.jump();
+        }
+      };
+
+      function onKeyDown(e) {
+        if (e.code === 'Space' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          jumpTriggerFn();
+        }
+      }
+      function onPointerDown(e) {
+        e.preventDefault();
+        jumpTriggerFn();
+      }
+      window.addEventListener('keydown', onKeyDown);
+      canvas.addEventListener('pointerdown', onPointerDown);
+
+      function finishJump(won) {
+        if (ended) return;
+        ended = true;
+        const survived = 15 - timeLeft;
+        const stars = won ? 3 : Math.max(1, Math.floor(survived / 5));
+        showGameResult({
+          emoji: won ? '🏃✨' : '💫',
+          praise: won ? '堅持晒 15 秒！身手超敏捷！' : '差少少就過關喇，下次一定得！',
+          detail: won ? `成功跳過 ${cleared} 個魔法障礙物！` : `你堅持咗 ${survived} 秒，跳過 ${cleared} 個障礙！`,
+          scoreText: `${cleared} 個障礙`,
+          starsEarned: stars
+        });
+      }
+
+      const timerInt = setInterval(() => {
+        if (ended) return;
+        timeLeft--;
+        document.getElementById('hud-time').textContent = `${timeLeft}s`;
+        if (timeLeft <= 0) {
+          finishJump(true);
+        }
+      }, 1000);
+
+      function loop() {
+        if (ended) return;
+        frameCount++;
+
+        // Physics
+        player.vy += 0.62;
+        player.y += player.vy;
+        if (player.y >= groundY - player.h) {
+          player.y = groundY - player.h;
+          player.vy = 0;
+          player.jumpsLeft = 2;
+        }
+
+        // Spawn obstacles
+        spawnCooldown--;
+        if (spawnCooldown <= 0) {
+          const isTall = Math.random() > 0.65;
+          obstacles.push({
+            x: w + 20,
+            w: 28,
+            h: isTall ? 44 : 32,
+            icon: isTall ? '🌵' : '🍄',
+            passed: false
+          });
+          spawnCooldown = 68 + Math.floor(Math.random() * 45);
+        }
+
+        // Background sky gradient
+        const grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, '#38bdf8');
+        grad.addColorStop(1, '#e0f2fe');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Moving clouds
+        ctx.font = '28px sans-serif';
+        ctx.fillText('☁️', (w - (frameCount * 0.8) % (w + 80)) + 20, 48);
+        ctx.fillText('☁️', (w - ((frameCount * 0.5 + 220) % (w + 80))) + 20, 82);
+
+        // Ground
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(0, groundY, w, h - groundY);
+        ctx.fillStyle = '#059669';
+        ctx.fillRect(0, groundY, w, 6);
+
+        // Update & Draw Obstacles
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+          const ob = obstacles[i];
+          ob.x -= 4.8;
+
+          ctx.font = `${ob.h}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(ob.icon, ob.x + ob.w / 2, groundY + 4);
+
+          // Forgiving hitbox
+          const pad = 7;
+          if (
+            player.x + player.w - pad > ob.x + pad &&
+            player.x + pad < ob.x + ob.w - pad &&
+            player.y + player.h - pad > groundY - ob.h + pad
+          ) {
+            SoundFX.bomb();
+            triggerArenaShake();
+            finishJump(false);
+            return;
+          }
+
+          if (!ob.passed && ob.x + ob.w < player.x) {
+            ob.passed = true;
+            cleared++;
+            SoundFX.pop();
+            document.getElementById('hud-score').textContent = `${cleared} 關`;
+          }
+
+          if (ob.x < -50) obstacles.splice(i, 1);
+        }
+
+        // Draw Player (Cute Magic Wizard Runner)
+        ctx.font = '38px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.save();
+        ctx.translate(player.x + player.w / 2, player.y + player.h + 2);
+        // Flip emoji to face right
+        ctx.scale(-1, 1);
+        ctx.fillText('🧙', 0, 0);
+        ctx.restore();
+
+        rafId = requestAnimationFrame(loop);
+      }
+
+      rafId = requestAnimationFrame(loop);
+
+      activeGameCleanup = () => {
+        cancelAnimationFrame(rafId);
+        clearInterval(timerInt);
+        window.removeEventListener('keydown', onKeyDown);
+        canvas.removeEventListener('pointerdown', onPointerDown);
+        jumpTriggerFn = null;
+      };
+    }
+
+    /* =====================================================================
+       GAME 3: ⭐ 魔法接星星 (NEW • 手眼協調 - 20s Fast Catcher)
+       ===================================================================== */
+    function startCatchGame() {
+      document.getElementById('hud-icon').textContent = '⭐';
+      document.getElementById('hud-title').textContent = '魔法接星星';
+      document.getElementById('hud-tip').textContent = '左右滑動控制魔法帽！接星星(+1)同寶石(+3)，避開紫色炸彈(-2)！';
+      document.getElementById('canvas-game-wrapper').classList.remove('hidden');
+
+      const { canvas, ctx, w, h } = setupGameCanvas();
+
+      let basketX = w / 2;
+      const basketW = 78;
+      const basketY = h - 38;
+      let items = [];
+      let popups = [];
+      let score = 0;
+      let timeLeft = 20;
+      let spawnTimer = 0;
+      let ended = false;
+      let rafId = null;
+
+      document.getElementById('hud-score').textContent = '0 分';
+      document.getElementById('hud-time').textContent = `${timeLeft}s`;
+
+      function moveBasket(clientX) {
+        const rect = canvas.getBoundingClientRect();
+        const relX = ((clientX - rect.left) / rect.width) * w;
+        basketX = Math.max(basketW / 2, Math.min(w - basketW / 2, relX));
+      }
+
+      function onPointerMove(e) {
+        moveBasket(e.clientX);
+      }
+      function onTouchMove(e) {
+        e.preventDefault();
+        if (e.touches[0]) moveBasket(e.touches[0].clientX);
+      }
+
+      canvas.addEventListener('pointermove', onPointerMove);
+      canvas.addEventListener('pointerdown', onPointerMove);
+      canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+
+      const timerInt = setInterval(() => {
+        if (ended) return;
+        timeLeft--;
+        document.getElementById('hud-time').textContent = `${timeLeft}s`;
+        if (timeLeft <= 0) {
+          ended = true;
+          const stars = score >= 18 ? 3 : (score >= 8 ? 2 : 1);
+          showGameResult({
+            emoji: score >= 18 ? '🌟🎩' : '⭐',
+            praise: score >= 18 ? '手眼協調滿分！太厲害喇！' : '接得好準喎！繼續努力！',
+            detail: `你喺 20 秒內接住咗大量魔法寶物！`,
+            scoreText: `${score} 分`,
+            starsEarned: stars
+          });
+        }
+      }, 1000);
+
+      function loop() {
+        if (ended) return;
+
+        // Spawn falling items
+        spawnTimer--;
+        if (spawnTimer <= 0) {
+          const r = Math.random();
+          let type = 'star';
+          if (r > 0.78) type = 'gem';
+          else if (r < 0.24) type = 'bomb';
+
+          items.push({
+            x: 28 + Math.random() * (w - 56),
+            y: -20,
+            vy: type === 'gem' ? 4.4 : (type === 'bomb' ? 3.8 : 3.4) + Math.random() * 1.4,
+            type,
+            icon: type === 'gem' ? '💎' : (type === 'bomb' ? '💣' : '⭐'),
+            pts: type === 'gem' ? 3 : (type === 'bomb' ? -2 : 1)
+          });
+          spawnTimer = 22 + Math.floor(Math.random() * 16);
+        }
+
+        // Night magic sky background
+        const grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, '#1e1b4b');
+        grad.addColorStop(1, '#4c1d95');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Subtle twinkling background dots
+        ctx.fillStyle = 'rgba(255,255,255,0.22)';
+        for (let i = 0; i < 12; i++) {
+          ctx.beginPath();
+          ctx.arc((i * 73) % w, (i * 47) % (h - 60), 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Update & draw falling items
+        for (let i = items.length - 1; i >= 0; i--) {
+          const it = items[i];
+          it.y += it.vy;
+
+          // Glow aura behind gem or bomb
+          if (it.type === 'gem') {
+            ctx.beginPath();
+            ctx.arc(it.x, it.y, 20, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+            ctx.fill();
+          } else if (it.type === 'bomb') {
+            ctx.beginPath();
+            ctx.arc(it.x, it.y, 19, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(192, 38, 211, 0.35)';
+            ctx.fill();
+          }
+
+          ctx.font = '30px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(it.icon, it.x, it.y);
+
+          // Catch check
+          if (
+            it.y >= basketY - 22 &&
+            it.y <= basketY + 18 &&
+            Math.abs(it.x - basketX) <= basketW / 2 + 10
+          ) {
+            score = Math.max(0, score + it.pts);
+            document.getElementById('hud-score').textContent = `${score} 分`;
+
+            if (it.type === 'star') SoundFX.star();
+            else if (it.type === 'gem') SoundFX.gem();
+            else {
+              SoundFX.bomb();
+              triggerArenaShake();
+            }
+
+            popups.push({
+              x: it.x,
+              y: basketY - 28,
+              text: it.pts > 0 ? `+${it.pts}` : `${it.pts}`,
+              color: it.type === 'bomb' ? '#fb7185' : (it.type === 'gem' ? '#38bdf8' : '#fde047'),
+              life: 1
+            });
+
+            items.splice(i, 1);
+            continue;
+          }
+
+          if (it.y > h + 30) items.splice(i, 1);
+        }
+
+        // Draw Magic Catcher Hat / Basket
+        ctx.save();
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.22)';
+        ctx.beginPath();
+        ctx.ellipse(basketX, basketY + 6, basketW / 2 + 6, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Catcher rim
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.roundRect(basketX - basketW / 2, basketY - 8, basketW, 18, 9);
+        ctx.fill();
+        ctx.strokeStyle = '#fef3c7';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        ctx.font = '32px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🎩', basketX, basketY - 2);
+        ctx.restore();
+
+        // Draw floating score popups
+        for (let i = popups.length - 1; i >= 0; i--) {
+          const p = popups[i];
+          p.y -= 1.4;
+          p.life -= 0.035;
+          if (p.life <= 0) {
+            popups.splice(i, 1);
+            continue;
+          }
+          ctx.save();
+          ctx.globalAlpha = p.life;
+          ctx.font = '900 22px "Fredoka", sans-serif';
+          ctx.fillStyle = p.color;
+          ctx.textAlign = 'center';
+          ctx.fillText(p.text, p.x, p.y);
+          ctx.restore();
+        }
+
+        rafId = requestAnimationFrame(loop);
+      }
+
+      rafId = requestAnimationFrame(loop);
+
+      activeGameCleanup = () => {
+        cancelAnimationFrame(rafId);
+        clearInterval(timerInt);
+        canvas.removeEventListener('pointermove', onPointerMove);
+        canvas.removeEventListener('pointerdown', onPointerMove);
+        canvas.removeEventListener('touchmove', onTouchMove);
+      };
+    }
+
+    /* =====================================================================
+       GAME 4: 👾 極速拍拍小精靈 (NEW • 手眼協調 - 15s Rapid Reflex Grid)
+       ===================================================================== */
+    function startWhackGame() {
+      document.getElementById('hud-icon').textContent = '👾';
+      document.getElementById('hud-title').textContent = '極速拍拍小精靈';
+      document.getElementById('hud-tip').textContent = '快手拍走小精靈(+1)同金色精靈(+2)，千祈唔好拍炸彈(-2)！';
+
+      const grid = document.getElementById('whack-game-wrapper');
+      grid.classList.remove('hidden');
+      grid.innerHTML = '';
+
+      let score = 0;
+      let timeLeft = 15;
+      let ended = false;
+      const portals = [];
+      const activeTimeouts = new Set();
+
+      document.getElementById('hud-score').textContent = '0 分';
+      document.getElementById('hud-time').textContent = `${timeLeft}s`;
+
+      // Build 9 magic portals
+      for (let i = 0; i < 9; i++) {
+        const portal = document.createElement('button');
+        portal.type = 'button';
+        portal.className = 'magic-portal rounded-3xl flex items-center justify-center focus:outline-none select-none';
+
+        const sprite = document.createElement('div');
+        sprite.className = 'sprite-entity text-5xl sm:text-6xl pointer-events-none select-none';
+        portal.appendChild(sprite);
+
+        const state = { el: portal, sprite, active: false, type: null, hideTimer: null };
+        portals.push(state);
+
+        portal.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          if (ended || !state.active) return;
+
+          state.active = false;
+          clearTimeout(state.hideTimer);
+          state.sprite.classList.remove('up');
+          state.sprite.classList.add('hit');
+
+          let pts = 1;
+          let color = '#10b981';
+          if (state.type === 'gold') {
+            pts = 2;
+            color = '#f59e0b';
+            SoundFX.gem();
+          } else if (state.type === 'bomb') {
+            pts = -2;
+            color = '#f43f5e';
+            SoundFX.bomb();
+            triggerArenaShake();
+          } else {
+            SoundFX.pop();
+          }
+
+          score = Math.max(0, score + pts);
+          document.getElementById('hud-score').textContent = `${score} 分`;
+
+          // Floating popup inside portal
+          const pop = document.createElement('span');
+          pop.className = 'score-popup text-2xl';
+          pop.style.left = '50%';
+          pop.style.top = '35%';
+          pop.style.color = color;
+          pop.textContent = pts > 0 ? `+${pts}` : `${pts}`;
+          portal.appendChild(pop);
+          setTimeout(() => pop.remove(), 650);
+        });
+
+        grid.appendChild(portal);
+      }
+
+      function spawnSprite() {
+        if (ended) return;
+        const available = portals.filter(p => !p.active);
+        if (available.length > 0) {
+          const chosen = available[Math.floor(Math.random() * available.length)];
+          const r = Math.random();
+          let type = 'normal';
+          let icon = '👾';
+          if (r > 0.78) {
+            type = 'gold';
+            icon = '🧚';
+          } else if (r < 0.22) {
+            type = 'bomb';
+            icon = '💣';
+          }
+
+          chosen.active = true;
+          chosen.type = type;
+          chosen.sprite.textContent = icon;
+          chosen.sprite.classList.remove('hit');
+          // Trigger pop-up
+          requestAnimationFrame(() => chosen.sprite.classList.add('up'));
+
+          const stayDuration = type === 'gold' ? 760 : (920 + Math.random() * 320);
+          chosen.hideTimer = setTimeout(() => {
+            if (chosen.active) {
+              chosen.active = false;
+              chosen.sprite.classList.remove('up');
+            }
+          }, stayDuration);
+          activeTimeouts.add(chosen.hideTimer);
+        }
+
+        // Schedule next spawn (fast arcade pacing!)
+        const nextDelay = 360 + Math.random() * 260;
+        const t = setTimeout(spawnSprite, nextDelay);
+        activeTimeouts.add(t);
+      }
+
+      // Kick off two staggered spawners for lively action
+      spawnSprite();
+      const secondSpawner = setTimeout(spawnSprite, 450);
+      activeTimeouts.add(secondSpawner);
+
+      const timerInt = setInterval(() => {
+        if (ended) return;
+        timeLeft--;
+        document.getElementById('hud-time').textContent = `${timeLeft}s`;
+        if (timeLeft <= 0) {
+          ended = true;
+          const stars = score >= 14 ? 3 : (score >= 7 ? 2 : 1);
+          showGameResult({
+            emoji: score >= 14 ? '⚡👾' : '✨',
+            praise: score >= 14 ? '反應超快！手眼協調滿分！' : '拍得好準喎！好叻仔/女！',
+            detail: '15 秒極速反應挑戰完成！',
+            scoreText: `${score} 分`,
+            starsEarned: stars
+          });
+        }
+      }, 1000);
+
+      activeGameCleanup = () => {
+        ended = true;
+        clearInterval(timerInt);
+        activeTimeouts.forEach(t => clearTimeout(t));
+        activeTimeouts.clear();
+      };
+    }
+
+    /* =====================================================================
+       7. INITIALIZATION & RESIZE HANDLING
+       ===================================================================== */
+    window.addEventListener('resize', () => {
+      drawWheel();
+    });
+
+    window.onload = function () {
+      loadStats();
+      updateTimerUI();
+      switchMode('knowledge'); // Start directly on the newly added 語文知識 mode
+    };
+  </script>
+</body>
+</html>
